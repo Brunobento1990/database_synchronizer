@@ -8,7 +8,7 @@ public class MysqlDatabase : IDatabase
     {
         _stringConnection = stringConnection;
     }
-    public Task ExecuteQueryAsync(string query, List<dynamic> data)
+    public Task ExecuteQueryAsync(string query)
     {
         throw new NotImplementedException();
     }

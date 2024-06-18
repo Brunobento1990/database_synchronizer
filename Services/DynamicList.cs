@@ -1,8 +1,11 @@
-﻿namespace database_synchronizer.Services;
+﻿using System.Globalization;
+using System.Text;
+
+namespace database_synchronizer.Services;
 
 public static class DynamicList
 {
-    public static List<dynamic> Create(FileModel fileModel)
+    public static string Create(FileModel fileModel)
     {
         Console.WriteLine("Lendo a planilha...");
         var xls = new XLWorkbook(fileModel.Path);
@@ -20,20 +23,39 @@ public static class DynamicList
             "H",
             "I"
         };
-            
-        var listDynamic = new List<dynamic>();
+        StringBuilder sqlBuilder = new StringBuilder($"insert into {fileModel.Tabela} ({fileModel.ColumnsSql}) values ");
 
         for (int l = 2; l <= rowns; l++)
         {
             Console.WriteLine("Montando lista de dados...");
             var objDynamic = new System.Dynamic.ExpandoObject() as IDictionary<string, object>;
-            
+            sqlBuilder.Append('(');
             for (int i = 0; i < fileModel.Columns.Length; i++)
-                objDynamic[fileModel.Columns[i].Trim()] = spreadsheet.Cell($"{_columns.ElementAt(i)}{l}").Value.ToString().Trim();
+            {
+                var value = spreadsheet.Cell($"{_columns.ElementAt(i)}{l}").Value.ToString().Trim();
+                DateTime dateValue;
+                string format = "dd/MM/yyyy HH:mm:ss";
 
-            listDynamic.Add(objDynamic);
+                bool success = DateTime.TryParseExact(value, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue);
+
+                if (success)
+                {
+                    value = dateValue.ToString("yyyy-MM-dd");
+                }
+                sqlBuilder.Append($"'{value}',");
+            }
+
+            if (sqlBuilder.Length > 0)
+            {
+                sqlBuilder.Length--;
+            }
+            sqlBuilder.Append("),");
+        }
+        if (sqlBuilder.Length > 0)
+        {
+            sqlBuilder.Length--;
         }
 
-        return listDynamic;
+        return sqlBuilder.ToString();
     }
 }

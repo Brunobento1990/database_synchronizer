@@ -1,4 +1,4 @@
-﻿using System.Dynamic;
+﻿using Npgsql;
 
 namespace database_synchronizer.Databases;
 
@@ -11,19 +11,28 @@ public class PgDatabase : IDatabase
         _stringConnection = stringConnection;
     }
 
-    public Task ExecuteQueryAsync(string query, List<dynamic> data)
+    public async Task ExecuteQueryAsync(string query)
     {
 
-        //private static dynamic? GetPropertyValue(ExpandoObject expando, string propertyName)
-        //{
-        //    var expandoDict = expando as IDictionary<string, dynamic>;
-        //    if (expandoDict != null && expandoDict.ContainsKey(propertyName))
-        //    {
-        //        return expandoDict[propertyName];
-        //    }
-        //    return null;
-        //}
+        using var connection = new NpgsqlConnection(_stringConnection);
+        try
+        {
+            await connection.OpenAsync();
 
-        throw new NotImplementedException();
+            using var command = new NpgsqlCommand(query, connection);
+            int rowsAffected = await command.ExecuteNonQueryAsync();
+
+            Console.WriteLine($"{rowsAffected} registros inseridos.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using database_synchronizer.Databases;
+using System.Text.RegularExpressions;
 
 namespace database_synchronizer.Services;
 
@@ -22,11 +23,14 @@ public class Menu
         Console.WriteLine("Informe o nome das colunas, separado por virgula!");
         var columns = Console.ReadLine();
 
-        var fileModel = new FileModel(path, spreadsheet, columns);
+        Console.WriteLine("Informe o nome da tabela do banco de dados!");
+        var tabela = Console.ReadLine();
 
-        var data = DynamicList.Create(fileModel);
+        var fileModel = new FileModel(path, spreadsheet, columns, tabela, columns);
 
-        Console.WriteLine("Informe o tipo de banco de dados: \\n 1 - Postgres \\n 2 - Mysql");
+        var sql = DynamicList.Create(fileModel);
+
+        Console.WriteLine("Informe o tipo de banco de dados: \\n 1 - Mysql \\n 2 - Postgres");
         var typeDb = int.Parse(Console.ReadLine() ?? "0");
 
         Console.WriteLine("Informe a string de conexão com o banco de dados!");
@@ -36,7 +40,7 @@ public class Menu
 
         var db = FactoryDatabase.GetDatabase(typeDb, stringConnection);
 
-        await db.ExecuteQueryAsync("", data);
+        await db.ExecuteQueryAsync(sql);
 
         return true;
     }

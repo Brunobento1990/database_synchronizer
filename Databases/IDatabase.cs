@@ -2,5 +2,5 @@
 
 public interface IDatabase
 {
-    Task ExecuteQueryAsync(string query, List<dynamic> data);
+    Task ExecuteQueryAsync(string query);
 }
