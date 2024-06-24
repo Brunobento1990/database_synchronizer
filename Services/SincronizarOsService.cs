@@ -7,6 +7,7 @@ public class SincronizarOsService
 {
     public async Task Sincronizar()
     {
+        var conn = "";
         Console.WriteLine("Lendo a planilha...");
         var xls = new XLWorkbook("D:\\UPDATEOS.xlsx");
         var spreadsheet = xls.Worksheets.First(w => w.Name == "Planilha1");
@@ -26,9 +27,9 @@ public class SincronizarOsService
 
         for (int i = 2; i <= rowns; i++)
         {
-            using var connection = new NpgsqlConnection("");
-            using var connection2 = new NpgsqlConnection("");
-            using var connection3 = new NpgsqlConnection("");
+            using var connection = new NpgsqlConnection(conn);
+            using var connection2 = new NpgsqlConnection(conn);
+            using var connection3 = new NpgsqlConnection(conn);
             await connection.OpenAsync();
             await connection2.OpenAsync();
             await connection3.OpenAsync();
@@ -69,6 +70,22 @@ public class SincronizarOsService
                 await setorSelect.ReadAsync();
                 statusId = setorSelect.GetGuid(0);
             }
+            else
+            {
+                using var connection4 = new NpgsqlConnection(conn);
+                var querySelect4 = $"select id from \"statusOs\" where id = 'efb5fb7a-0255-47d7-82a6-14ede93b58d7' LIMIT 1";
+                await connection4.OpenAsync();
+                using var commandSelect4 = new NpgsqlCommand(querySelect4, connection4);
+                var setorSelect4 = await commandSelect4.ExecuteReaderAsync();
+
+                if (setorSelect4.HasRows)
+                {
+                    await setorSelect4.ReadAsync();
+                    statusId = setorSelect4.GetGuid(0);
+                }
+
+                await connection4.CloseAsync();
+            }
 
             using var commandSelectPatrimonio = new NpgsqlCommand(querySelectEquipamento, connection3);
             var quipamentoSelect = await commandSelectPatrimonio.ExecuteReaderAsync();
@@ -77,6 +94,22 @@ public class SincronizarOsService
             {
                 await quipamentoSelect.ReadAsync();
                 equipamentoId = quipamentoSelect.GetGuid(0);
+            }
+            else
+            {
+                using var connection5 = new NpgsqlConnection(conn);
+                var querySelect5 = $"select id from \"equipments\" where id = '6775e3a1-9c94-4a27-a527-0e18a13566d4' order by dtcreation desc LIMIT 1";
+                await connection5.OpenAsync();
+                using var commandSelect5 = new NpgsqlCommand(querySelect5, connection5);
+                var setorSelect5 = await commandSelect5.ExecuteReaderAsync();
+
+                if (setorSelect5.HasRows)
+                {
+                    await setorSelect5.ReadAsync();
+                    equipamentoId = setorSelect5.GetGuid(0);
+                }
+
+                await connection5.CloseAsync();
             }
 
             var query = $"INSERT INTO public.os (id, \"statusOsId\", \"equipmentId\", failure, \"internalCall\", \"isAntenna\", \"isBattery\", \"isCover\", \"isCapa\", \"numberOs\", \"numberNF\", \"data\", sdcv, dtcreation, \"cost\") ";

@@ -8,6 +8,7 @@ public class SincronizarEquipamentosService
 {
     public async Task Sincronizar()
     {
+        var conn = "";
         Console.WriteLine("Lendo a planilha...");
         var xls = new XLWorkbook("D:\\EQUIPAMENTOS.xlsx");
         var spreadsheet = xls.Worksheets.First(w => w.Name == "Contabilidade - Consulta detalh");
@@ -27,8 +28,8 @@ public class SincronizarEquipamentosService
 
         for (int i = 2; i <= rowns; i++)
         {
-            using var connection = new NpgsqlConnection("");
-            using var connection2 = new NpgsqlConnection("");
+            using var connection = new NpgsqlConnection(conn);
+            using var connection2 = new NpgsqlConnection(conn);
             await connection.OpenAsync();
             await connection2.OpenAsync();
 
@@ -61,6 +62,22 @@ public class SincronizarEquipamentosService
             {
                 await setorSelect.ReadAsync();
                 setorId = setorSelect.GetGuid(0);
+            }
+            else
+            {
+                var querySelect3 = $"select id from sectors where id = 'f8a2ca2c-ab66-4c12-b8c7-3a14fe0e5b50' order by dtcreation LIMIT 1";
+                using var connection3 = new NpgsqlConnection(conn);
+                await connection3.OpenAsync();
+                using var commandSelect3 = new NpgsqlCommand(querySelect3, connection3);
+                var setorSelect3 = await commandSelect3.ExecuteReaderAsync();
+
+                if (setorSelect3.HasRows) 
+                {
+                    await setorSelect3.ReadAsync();
+                    setorId = setorSelect3.GetGuid(0);
+                }
+
+                await connection3.CloseAsync();
             }
 
             var query = "insert into equipments (" +
